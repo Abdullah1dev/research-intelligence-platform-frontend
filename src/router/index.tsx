@@ -6,6 +6,7 @@ import Papers from "../pages/Papers";
 import CreatePaper from "../pages/CreatePaper";
 import PaperWorkspace from "../pages/PaperWorkspace";
 import Assistant from "../pages/Assistant";
+import Login from "../pages/Login";
 
 const router = createBrowserRouter([
   {
@@ -32,6 +33,11 @@ const router = createBrowserRouter([
       path: "assistant",
       element: <Assistant />,
     },
+    {
+    path: "/login",
+    element: <Login />,
+  },
+    
     ],
   },
 ]);
