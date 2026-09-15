@@ -2,22 +2,13 @@ import { NavLink } from "react-router-dom";
 
 function Sidebar() {
   const navItems = [
-    {
-      label: "Dashboard",
-      path: "/dashboard",
-    },
-    {
-      label: "Papers",
-      path: "/papers",
-    },
-    {
-      label: "AI Assistant",
-      path: "/assistant",
-    },
+    { label: "Dashboard", path: "/dashboard" },
+    { label: "Papers", path: "/papers" },
+    { label: "AI Assistant", path: "/assistant" },
   ];
 
   return (
-    <aside className="fixed left-0 top-0 flex h-screen w-64 flex-col border-r border-slate-200 bg-white">
+    <aside className="fixed left-0 top-0 z-40 hidden h-screen w-64 flex-col border-r border-slate-200 bg-white lg:flex">
       {/* Brand */}
       <div className="border-b border-slate-200 px-6 py-5">
         <h1 className="text-lg font-semibold tracking-tight text-slate-900">
