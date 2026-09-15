@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 function CreatePaper() {
   return (
     <div className="p-8">
@@ -177,12 +179,12 @@ function CreatePaper() {
 
             {/* Actions */}
             <div className="flex items-center justify-end gap-3 border-t border-slate-200 pt-6">
-              <button
-                type="button"
-                className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors duration-200 hover:bg-slate-50"
-              >
-                Cancel
-              </button>
+              <Link
+              to="/papers"
+              className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors duration-200 hover:bg-slate-50"
+            >
+              Cancel
+            </Link>
 
               <button
                 type="submit"

@@ -1,8 +1,10 @@
+import { Link } from "react-router-dom";
 import PaperCard from "../components/PaperCard";
 
 function Papers() {
   const papers = [
     {
+      id: 1,
       title: "Attention Is All You Need",
       authors: "Ashish Vaswani et al.",
       publicationYear: 2017,
@@ -11,6 +13,7 @@ function Papers() {
       doi: "10.48550/arXiv.1706.03762",
     },
     {
+      id: 1,
       title: "BERT: Pre-training of Deep Bidirectional Transformers",
       authors: "Jacob Devlin et al.",
       publicationYear: 2019,
@@ -39,9 +42,11 @@ function Papers() {
             </p>
           </div>
 
-          <button className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-blue-700 hover:shadow-md">
-            Add Paper
-          </button>
+          <Link
+          to="/papers/new"
+          className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-blue-700 hover:shadow-md">
+      Add Paper
+    </Link>
         </div>
       </section>
 

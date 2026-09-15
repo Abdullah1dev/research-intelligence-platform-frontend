@@ -1,4 +1,7 @@
+import { Link } from "react-router-dom";
+
 interface PaperCardProps {
+  id: number;
   title: string;
   authors: string;
   publicationYear: number;
@@ -8,6 +11,7 @@ interface PaperCardProps {
 }
 
 function PaperCard({
+  id,
   title,
   authors,
   publicationYear,
@@ -46,9 +50,12 @@ function PaperCard({
           </p>
         </div>
 
-        <button className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-all duration-200 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700">
+        <Link
+          to={`/papers/${id}`}
+          className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-all duration-200 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+        >
           Open
-        </button>
+        </Link>
       </div>
     </article>
   );

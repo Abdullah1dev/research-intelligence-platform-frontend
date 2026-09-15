@@ -4,7 +4,7 @@ function Sidebar() {
   const navItems = [
     {
       label: "Dashboard",
-      path: "/",
+      path: "/dashboard",
     },
     {
       label: "Papers",

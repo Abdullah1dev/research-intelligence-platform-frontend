@@ -1,8 +1,16 @@
+import { Link } from "react-router-dom";
+
 function PaperWorkspace() {
   return (
     <div className="p-8">
       {/* Header */}
 
+      <Link
+        to="/papers"
+        className="inline-flex items-center text-sm font-medium text-slate-500 transition-colors duration-200 hover:text-blue-600"
+        >
+        ← Back to Papers
+        </Link>
       <section>
         <p className="text-sm font-medium text-blue-600">
           Research Workspace
