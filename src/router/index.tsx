@@ -5,6 +5,7 @@ import Dashboard from "../pages/Dashboard";
 import Papers from "../pages/Papers";
 import CreatePaper from "../pages/CreatePaper";
 import PaperWorkspace from "../pages/PaperWorkspace";
+import Assistant from "../pages/Assistant";
 
 const router = createBrowserRouter([
   {
@@ -27,6 +28,10 @@ const router = createBrowserRouter([
       path: "papers/:paperId",
       element: <PaperWorkspace />,
       },
+      {
+      path: "assistant",
+      element: <Assistant />,
+    },
     ],
   },
 ]);
