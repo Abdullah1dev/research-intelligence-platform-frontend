@@ -93,3 +93,56 @@ export async function getPapers(
     },
   );
 }
+
+export async function getPaper(
+  paperId: number,
+): Promise<Paper> {
+  const token = localStorage.getItem(
+    "access_token",
+  );
+
+  return apiClient<Paper>(
+    `/papers/${paperId}`,
+    {
+      method: "GET",
+      token: token ?? undefined,
+    },
+  );
+}
+
+
+
+export interface PaperAskSource {
+  chunk_id: number;
+  chunk_index: number;
+  content: string;
+  similarity_score: number;
+}
+
+export interface PaperAskResponse {
+  paper_id: number;
+  document_id: number;
+  question: string;
+  answer: string;
+  sources: PaperAskSource[];
+}
+
+export async function askPaper(
+  paperId: number,
+  question: string,
+): Promise<PaperAskResponse> {
+  const token = localStorage.getItem(
+    "access_token",
+  );
+
+  return apiClient<PaperAskResponse>(
+    `/papers/${paperId}/ask`,
+    {
+      method: "POST",
+      token: token ?? undefined,
+      body: JSON.stringify({
+        question,
+      }),
+    },
+  );
+}
