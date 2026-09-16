@@ -62,11 +62,17 @@ export async function getPapers(
   }
 
   if (params.sort_by) {
-    searchParams.set("sort_by", params.sort_by);
+    searchParams.set(
+      "sort_by",
+      params.sort_by,
+    );
   }
 
   if (params.order) {
-    searchParams.set("order", params.order);
+    searchParams.set(
+      "order",
+      params.order,
+    );
   }
 
   const query = searchParams.toString();
@@ -75,10 +81,15 @@ export async function getPapers(
     ? `/papers/?${query}`
     : "/papers/";
 
-  const token = localStorage.getItem("access_token");
+  const token = localStorage.getItem(
+    "access_token",
+  );
 
-  return apiClient<PapersResponse>(endpoint, {
-    method: "GET",
-    token: token ?? undefined,
-  });
+  return apiClient<PapersResponse>(
+    endpoint,
+    {
+      method: "GET",
+      token: token ?? undefined,
+    },
+  );
 }

@@ -45,7 +45,7 @@ function PaperCard({
             </span>
           </div>
 
-          <p className="mt-3 text-xs text-slate-400">
+          <p className="mt-3 break-all text-xs text-slate-400">
             DOI: {doi}
           </p>
         </div>
