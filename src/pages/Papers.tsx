@@ -1,27 +1,40 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+
 import PaperCard from "../components/PaperCard";
+import { getPapers } from "../api/papers";
+
+import type { Paper } from "../api/papers";
 
 function Papers() {
-  const papers = [
-    {
-      id: 1,
-      title: "Attention Is All You Need",
-      authors: "Ashish Vaswani et al.",
-      publicationYear: 2017,
-      journal: "NeurIPS",
-      category: "Artificial Intelligence",
-      doi: "10.48550/arXiv.1706.03762",
-    },
-    {
-      id: 1,
-      title: "BERT: Pre-training of Deep Bidirectional Transformers",
-      authors: "Jacob Devlin et al.",
-      publicationYear: 2019,
-      journal: "NAACL",
-      category: "Natural Language Processing",
-      doi: "10.18653/v1/N19-1423",
-    },
-  ];
+  const [papers, setPapers] = useState<Paper[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function loadPapers() {
+      try {
+        setError("");
+
+        const response = await getPapers({
+          page: 1,
+          limit: 10,
+        });
+
+        setPapers(response.items);
+      } catch (error) {
+        setError(
+          error instanceof Error
+            ? error.message
+            : "Unable to load papers.",
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadPapers();
+  }, []);
 
   return (
     <div className="p-8">
@@ -43,10 +56,11 @@ function Papers() {
           </div>
 
           <Link
-          to="/papers/new"
-          className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-blue-700 hover:shadow-md">
-      Add Paper
-    </Link>
+            to="/papers/new"
+            className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-blue-700 hover:shadow-md"
+          >
+            Add Paper
+          </Link>
         </div>
       </section>
 
@@ -102,14 +116,55 @@ function Papers() {
             </p>
           </div>
 
-          {/* Paper Cards */}
           <div>
-            {papers.map((paper) => (
-              <PaperCard
-                key={paper.doi}
-                {...paper}
-              />
-            ))}
+            {/* Loading */}
+            {isLoading && (
+              <div className="px-6 py-12 text-center">
+                <p className="text-sm text-slate-500">
+                  Loading papers...
+                </p>
+              </div>
+            )}
+
+            {/* Error */}
+            {!isLoading && error && (
+              <div className="px-6 py-12 text-center">
+                <p className="text-sm text-red-600">
+                  {error}
+                </p>
+              </div>
+            )}
+
+            {/* Empty state */}
+            {!isLoading &&
+              !error &&
+              papers.length === 0 && (
+                <div className="px-6 py-12 text-center">
+                  <p className="text-sm font-medium text-slate-700">
+                    No papers found.
+                  </p>
+
+                  <p className="mt-1 text-sm text-slate-400">
+                    Add your first research paper to get started.
+                  </p>
+                </div>
+              )}
+
+            {/* Paper list */}
+            {!isLoading &&
+              !error &&
+              papers.map((paper) => (
+                <PaperCard
+                  key={paper.id}
+                  id={paper.id}
+                  title={paper.title}
+                  authors={paper.authors}
+                  publicationYear={paper.publication_year}
+                  journal={paper.journal}
+                  category={paper.category}
+                  doi={paper.doi}
+                />
+              ))}
           </div>
         </div>
       </section>
