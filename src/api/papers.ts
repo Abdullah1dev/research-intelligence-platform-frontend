@@ -111,6 +111,9 @@ export async function getPaper(
 }
 
 
+// ==============================
+// Ask Paper
+// ==============================
 
 export interface PaperAskSource {
   chunk_id: number;
@@ -143,6 +146,102 @@ export async function askPaper(
       body: JSON.stringify({
         question,
       }),
+    },
+  );
+}
+
+
+// ==============================
+// Paper Summary
+// ==============================
+
+export interface PaperSummaryResponse {
+  paper_id: number;
+  document_id: number;
+  summary: string;
+}
+
+export async function summarizePaper(
+  paperId: number,
+): Promise<PaperSummaryResponse> {
+  const token = localStorage.getItem(
+    "access_token",
+  );
+
+  return apiClient<PaperSummaryResponse>(
+    `/papers/${paperId}/summarize`,
+    {
+      method: "POST",
+      token: token ?? undefined,
+    },
+  );
+}
+
+
+// ==============================
+// Paper Analysis
+// ==============================
+
+export interface PaperAnalysis {
+  research_domain: string;
+  key_topics: string[];
+  methodology: string;
+  key_findings: string[];
+  limitations: string;
+  future_work: string;
+}
+
+export interface PaperAnalysisResponse {
+  paper_id: number;
+  document_id: number;
+  analysis: PaperAnalysis;
+}
+
+export async function analyzePaper(
+  paperId: number,
+): Promise<PaperAnalysisResponse> {
+  const token = localStorage.getItem(
+    "access_token",
+  );
+
+  return apiClient<PaperAnalysisResponse>(
+    `/papers/${paperId}/analyze`,
+    {
+      method: "POST",
+      token: token ?? undefined,
+    },
+  );
+}
+
+
+// ==============================
+// Paper Recommendations
+// ==============================
+
+export interface PaperRecommendation {
+  paperId?: string;
+  title: string;
+  authors?: {
+    name: string;
+  }[];
+  year?: number;
+  url?: string;
+  abstract?: string;
+  citationCount?: number;
+}
+
+export async function getPaperRecommendations(
+  paperId: number,
+): Promise<PaperRecommendation[]> {
+  const token = localStorage.getItem(
+    "access_token",
+  );
+
+  return apiClient<PaperRecommendation[]>(
+    `/papers/${paperId}/recommendations`,
+    {
+      method: "GET",
+      token: token ?? undefined,
     },
   );
 }
