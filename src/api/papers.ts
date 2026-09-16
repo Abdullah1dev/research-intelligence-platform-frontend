@@ -33,6 +33,34 @@ export interface GetPapersParams {
   order?: "asc" | "desc";
 }
 
+export interface CreatePaperRequest {
+  title: string;
+  abstract: string;
+  authors: string;
+  publication_year: number;
+  journal: string;
+  doi: string;
+  category: string;
+  pdf_url: string;
+}
+
+export async function createPaper(
+  data: CreatePaperRequest,
+): Promise<Paper> {
+  const token = localStorage.getItem(
+    "access_token",
+  );
+
+  return apiClient<Paper>(
+    "/papers/",
+    {
+      method: "POST",
+      token: token ?? undefined,
+      body: JSON.stringify(data),
+    },
+  );
+}
+
 export async function getPapers(
   params: GetPapersParams = {},
 ): Promise<PapersResponse> {

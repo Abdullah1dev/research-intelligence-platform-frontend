@@ -16,9 +16,7 @@ export interface PaperDocument {
 export async function getPaperDocument(
   paperId: number,
 ): Promise<PaperDocument> {
-  const token = localStorage.getItem(
-    "access_token",
-  );
+  const token = localStorage.getItem("access_token");
 
   return apiClient<PaperDocument>(
     `/papers/${paperId}/document`,
@@ -27,4 +25,41 @@ export async function getPaperDocument(
       token: token ?? undefined,
     },
   );
+}
+
+export async function uploadPaperDocument(
+  paperId: number,
+  file: File,
+): Promise<PaperDocument> {
+  const token = localStorage.getItem("access_token");
+
+  const formData = new FormData();
+
+  formData.append("file", file);
+
+  const response = await fetch(
+    `http://localhost:8000/papers/${paperId}/document`,
+    {
+      method: "POST",
+      headers: {
+        ...(token
+          ? {
+              Authorization: `Bearer ${token}`,
+            }
+          : {}),
+      },
+      body: formData,
+    },
+  );
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+
+    throw new Error(
+      errorBody ||
+        `Document upload failed: ${response.status}`,
+    );
+  }
+
+  return response.json();
 }

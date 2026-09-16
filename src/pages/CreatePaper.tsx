@@ -1,6 +1,96 @@
-import { Link } from "react-router-dom";
+import {
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+} from "react";
+
+import {
+  Link,
+  useNavigate,
+} from "react-router-dom";
+
+import { createPaper } from "../api/papers";
+import { uploadPaperDocument } from "../api/documents";
 
 function CreatePaper() {
+  const navigate = useNavigate();
+
+  const [title, setTitle] = useState("");
+  const [authors, setAuthors] = useState("");
+  const [abstract, setAbstract] = useState("");
+  const [publicationYear, setPublicationYear] =
+    useState("");
+  const [journal, setJournal] = useState("");
+  const [doi, setDoi] = useState("");
+  const [category, setCategory] = useState("");
+  const [pdfUrl, setPdfUrl] = useState("");
+
+  const [selectedFile, setSelectedFile] =
+    useState<File | null>(null);
+
+  const [submitting, setSubmitting] =
+    useState(false);
+
+  const [error, setError] =
+    useState("");
+
+  function handleFileChange(
+    event: ChangeEvent<HTMLInputElement>,
+  ) {
+    const file =
+      event.target.files?.[0] ?? null;
+
+    setSelectedFile(file);
+  }
+
+  async function handleSubmit(
+    event: FormEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault();
+
+    setError("");
+
+    if (!selectedFile) {
+      setError(
+        "Please upload the research paper PDF.",
+      );
+
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      const paper = await createPaper({
+        title: title.trim(),
+        abstract: abstract.trim(),
+        authors: authors.trim(),
+        publication_year: Number(
+          publicationYear,
+        ),
+        journal: journal.trim(),
+        doi: doi.trim(),
+        category: category.trim(),
+        pdf_url: pdfUrl.trim(),
+      });
+
+      await uploadPaperDocument(
+        paper.id,
+        selectedFile,
+      );
+
+      navigate(`/papers/${paper.id}`);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to create the paper.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
     <div className="p-8">
       {/* Header */}
@@ -14,7 +104,8 @@ function CreatePaper() {
         </h1>
 
         <p className="mt-2 max-w-2xl text-sm text-slate-500">
-          Add a research paper to your personal research library.
+          Add a research paper and its document
+          to your research library.
         </p>
       </section>
 
@@ -27,26 +118,45 @@ function CreatePaper() {
             </h2>
 
             <p className="mt-1 text-sm text-slate-500">
-              Enter the bibliographic information for your paper.
+              Fields marked with * are required.
             </p>
           </div>
 
-          <form className="space-y-6 p-6">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6 p-6"
+          >
+            {/* Error */}
+            {error && (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
+              </div>
+            )}
+
             {/* Title */}
             <div>
               <label
                 htmlFor="title"
                 className="block text-sm font-medium text-slate-700"
               >
-                Title
+                Title{" "}
+                <span className="text-red-500">
+                  *
+                </span>
               </label>
 
               <input
                 id="title"
                 name="title"
                 type="text"
+                value={title}
+                onChange={(event) =>
+                  setTitle(event.target.value)
+                }
                 placeholder="Enter paper title"
-                className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                required
+                disabled={submitting}
+                className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50"
               />
             </div>
 
@@ -56,15 +166,24 @@ function CreatePaper() {
                 htmlFor="authors"
                 className="block text-sm font-medium text-slate-700"
               >
-                Authors
+                Authors{" "}
+                <span className="text-red-500">
+                  *
+                </span>
               </label>
 
               <input
                 id="authors"
                 name="authors"
                 type="text"
+                value={authors}
+                onChange={(event) =>
+                  setAuthors(event.target.value)
+                }
                 placeholder="e.g. Ashish Vaswani et al."
-                className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                required
+                disabled={submitting}
+                className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50"
               />
             </div>
 
@@ -74,51 +193,84 @@ function CreatePaper() {
                 htmlFor="abstract"
                 className="block text-sm font-medium text-slate-700"
               >
-                Abstract
+                Abstract{" "}
+                <span className="text-red-500">
+                  *
+                </span>
               </label>
 
               <textarea
                 id="abstract"
                 name="abstract"
                 rows={6}
+                value={abstract}
+                onChange={(event) =>
+                  setAbstract(event.target.value)
+                }
                 placeholder="Enter the paper abstract"
-                className="mt-2 w-full resize-y rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                required
+                disabled={submitting}
+                className="mt-2 w-full resize-y rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50"
               />
             </div>
 
             {/* Year + Journal */}
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              {/* Publication Year */}
               <div>
                 <label
                   htmlFor="publication_year"
                   className="block text-sm font-medium text-slate-700"
                 >
-                  Publication Year
+                  Publication Year{" "}
+                  <span className="text-red-500">
+                    *
+                  </span>
                 </label>
 
                 <input
                   id="publication_year"
                   name="publication_year"
                   type="number"
+                  min="1900"
+                  max="2100"
+                  value={publicationYear}
+                  onChange={(event) =>
+                    setPublicationYear(
+                      event.target.value,
+                    )
+                  }
                   placeholder="e.g. 2024"
-                  className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  required
+                  disabled={submitting}
+                  className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50"
                 />
               </div>
 
+              {/* Journal */}
               <div>
                 <label
                   htmlFor="journal"
                   className="block text-sm font-medium text-slate-700"
                 >
-                  Journal / Venue
+                  Journal / Venue{" "}
+                  <span className="text-red-500">
+                    *
+                  </span>
                 </label>
 
                 <input
                   id="journal"
                   name="journal"
                   type="text"
+                  value={journal}
+                  onChange={(event) =>
+                    setJournal(event.target.value)
+                  }
                   placeholder="e.g. NeurIPS"
-                  className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  required
+                  disabled={submitting}
+                  className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50"
                 />
               </div>
             </div>
@@ -129,15 +281,24 @@ function CreatePaper() {
                 htmlFor="category"
                 className="block text-sm font-medium text-slate-700"
               >
-                Category
+                Category{" "}
+                <span className="text-red-500">
+                  *
+                </span>
               </label>
 
               <input
                 id="category"
                 name="category"
                 type="text"
+                value={category}
+                onChange={(event) =>
+                  setCategory(event.target.value)
+                }
                 placeholder="e.g. Artificial Intelligence"
-                className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                required
+                disabled={submitting}
+                className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50"
               />
             </div>
 
@@ -147,15 +308,29 @@ function CreatePaper() {
                 htmlFor="doi"
                 className="block text-sm font-medium text-slate-700"
               >
-                DOI
+                DOI{" "}
+                <span className="text-red-500">
+                  *
+                </span>
               </label>
+
+              <p className="mt-1 text-xs text-slate-500">
+                Required by the current paper
+                API.
+              </p>
 
               <input
                 id="doi"
                 name="doi"
                 type="text"
+                value={doi}
+                onChange={(event) =>
+                  setDoi(event.target.value)
+                }
                 placeholder="e.g. 10.48550/arXiv.1706.03762"
-                className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                required
+                disabled={submitting}
+                className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50"
               />
             </div>
 
@@ -168,29 +343,104 @@ function CreatePaper() {
                 PDF URL
               </label>
 
+              <p className="mt-1 text-xs text-slate-500">
+                Optional. You can leave this empty
+                if you are uploading the PDF below.
+              </p>
+
               <input
                 id="pdf_url"
                 name="pdf_url"
                 type="url"
+                value={pdfUrl}
+                onChange={(event) =>
+                  setPdfUrl(event.target.value)
+                }
                 placeholder="https://example.com/paper.pdf"
-                className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                disabled={submitting}
+                className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50"
               />
+            </div>
+
+            {/* PDF Upload */}
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-5">
+              <div>
+                <label
+                  htmlFor="paper_file"
+                  className="block text-sm font-semibold text-slate-900"
+                >
+                  Research Paper{" "}
+                  <span className="text-red-500">
+                    *
+                  </span>
+                </label>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  Upload the actual PDF document
+                  associated with this paper.
+                </p>
+              </div>
+
+              <div className="mt-4">
+                <label
+                  htmlFor="paper_file"
+                  className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-white px-6 py-8 text-center transition-colors duration-200 hover:border-blue-400 hover:bg-blue-50/30"
+                >
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                    ↑
+                  </div>
+
+                  <p className="mt-3 text-sm font-medium text-slate-700">
+                    {selectedFile
+                      ? selectedFile.name
+                      : "Choose a PDF file"}
+                  </p>
+
+                  <p className="mt-1 text-xs text-slate-500">
+                    PDF files only
+                  </p>
+
+                  <input
+                    id="paper_file"
+                    name="paper_file"
+                    type="file"
+                    accept="application/pdf,.pdf"
+                    onChange={handleFileChange}
+                    disabled={submitting}
+                    className="sr-only"
+                  />
+                </label>
+
+                {selectedFile && (
+                  <p className="mt-2 text-xs text-slate-500">
+                    Selected:{" "}
+                    {selectedFile.name}
+                  </p>
+                )}
+              </div>
             </div>
 
             {/* Actions */}
             <div className="flex items-center justify-end gap-3 border-t border-slate-200 pt-6">
               <Link
-              to="/papers"
-              className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors duration-200 hover:bg-slate-50"
-            >
-              Cancel
-            </Link>
+                to="/papers"
+                className={`rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors duration-200 hover:bg-slate-50 ${
+                  submitting
+                    ? "pointer-events-none opacity-50"
+                    : ""
+                }`}
+              >
+                Cancel
+              </Link>
 
               <button
                 type="submit"
-                className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-blue-700 hover:shadow-md"
+                disabled={submitting}
+                className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-blue-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Create Paper
+                {submitting
+                  ? "Creating & Uploading..."
+                  : "Create Paper"}
               </button>
             </div>
           </form>
