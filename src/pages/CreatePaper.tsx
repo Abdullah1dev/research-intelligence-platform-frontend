@@ -18,43 +18,52 @@ function CreatePaper() {
   const [title, setTitle] = useState("");
   const [authors, setAuthors] = useState("");
   const [abstract, setAbstract] = useState("");
-  const [publicationYear, setPublicationYear] =
-    useState("");
+  const [publicationYear, setPublicationYear] = useState("");
   const [journal, setJournal] = useState("");
   const [doi, setDoi] = useState("");
   const [category, setCategory] = useState("");
-  const [pdfUrl, setPdfUrl] = useState("");
 
   const [selectedFile, setSelectedFile] =
     useState<File | null>(null);
 
-  const [submitting, setSubmitting] =
-    useState(false);
-
-  const [error, setError] =
-    useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   function handleFileChange(
     event: ChangeEvent<HTMLInputElement>,
   ) {
-    const file =
-      event.target.files?.[0] ?? null;
+    const file = event.target.files?.[0] ?? null;
 
+    if (!file) {
+      setSelectedFile(null);
+      return;
+    }
+
+    if (
+      file.type !== "application/pdf" &&
+      !file.name.toLowerCase().endsWith(".pdf")
+    ) {
+      setSelectedFile(null);
+      setError("Please select a PDF file.");
+      return;
+    }
+
+    setError("");
     setSelectedFile(file);
   }
 
-  async function handleSubmit(
-    event: FormEvent<HTMLFormElement>,
-  ) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     setError("");
 
     if (!selectedFile) {
-      setError(
-        "Please upload the research paper PDF.",
-      );
+      setError("Please upload the research paper PDF.");
+      return;
+    }
 
+    if (!publicationYear) {
+      setError("Please enter the publication year.");
       return;
     }
 
@@ -65,13 +74,10 @@ function CreatePaper() {
         title: title.trim(),
         abstract: abstract.trim(),
         authors: authors.trim(),
-        publication_year: Number(
-          publicationYear,
-        ),
+        publication_year: Number(publicationYear),
         journal: journal.trim(),
-        doi: doi.trim(),
+        doi: doi.trim() || undefined,
         category: category.trim(),
-        pdf_url: pdfUrl.trim(),
       });
 
       await uploadPaperDocument(
@@ -92,7 +98,7 @@ function CreatePaper() {
   }
 
   return (
-    <div className="p-8">
+    <div className="min-h-full bg-slate-50 px-6 py-8">
       {/* Header */}
       <section>
         <p className="text-sm font-medium text-blue-600">
@@ -103,22 +109,28 @@ function CreatePaper() {
           Add Paper
         </h1>
 
-        <p className="mt-2 max-w-2xl text-sm text-slate-500">
-          Add a research paper and its document
-          to your research library.
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+          Add a research paper to your library and
+          upload its PDF for AI-powered research,
+          analysis, and question answering.
         </p>
       </section>
 
       {/* Form */}
       <section className="mt-8 max-w-4xl">
         <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
+          {/* Form Header */}
           <div className="border-b border-slate-200 px-6 py-5">
             <h2 className="text-base font-semibold text-slate-900">
               Paper Information
             </h2>
 
             <p className="mt-1 text-sm text-slate-500">
-              Fields marked with * are required.
+              Fields marked with{" "}
+              <span className="font-medium text-red-500">
+                *
+              </span>{" "}
+              are required.
             </p>
           </div>
 
@@ -202,7 +214,7 @@ function CreatePaper() {
               <textarea
                 id="abstract"
                 name="abstract"
-                rows={6}
+                rows={7}
                 value={abstract}
                 onChange={(event) =>
                   setAbstract(event.target.value)
@@ -210,7 +222,7 @@ function CreatePaper() {
                 placeholder="Enter the paper abstract"
                 required
                 disabled={submitting}
-                className="mt-2 w-full resize-y rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50"
+                className="mt-2 w-full resize-y rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-900 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50"
               />
             </div>
 
@@ -304,19 +316,21 @@ function CreatePaper() {
 
             {/* DOI */}
             <div>
-              <label
-                htmlFor="doi"
-                className="block text-sm font-medium text-slate-700"
-              >
-                DOI{" "}
-                <span className="text-red-500">
-                  *
+              <div className="flex items-center gap-2">
+                <label
+                  htmlFor="doi"
+                  className="block text-sm font-medium text-slate-700"
+                >
+                  DOI
+                </label>
+
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">
+                  Optional
                 </span>
-              </label>
+              </div>
 
               <p className="mt-1 text-xs text-slate-500">
-                Required by the current paper
-                API.
+                Add the DOI if the paper has one.
               </p>
 
               <input
@@ -328,35 +342,6 @@ function CreatePaper() {
                   setDoi(event.target.value)
                 }
                 placeholder="e.g. 10.48550/arXiv.1706.03762"
-                required
-                disabled={submitting}
-                className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50"
-              />
-            </div>
-
-            {/* PDF URL */}
-            <div>
-              <label
-                htmlFor="pdf_url"
-                className="block text-sm font-medium text-slate-700"
-              >
-                PDF URL
-              </label>
-
-              <p className="mt-1 text-xs text-slate-500">
-                Optional. You can leave this empty
-                if you are uploading the PDF below.
-              </p>
-
-              <input
-                id="pdf_url"
-                name="pdf_url"
-                type="url"
-                value={pdfUrl}
-                onChange={(event) =>
-                  setPdfUrl(event.target.value)
-                }
-                placeholder="https://example.com/paper.pdf"
                 disabled={submitting}
                 className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50"
               />
@@ -364,29 +349,42 @@ function CreatePaper() {
 
             {/* PDF Upload */}
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-5">
-              <div>
-                <label
-                  htmlFor="paper_file"
-                  className="block text-sm font-semibold text-slate-900"
-                >
-                  Research Paper{" "}
-                  <span className="text-red-500">
-                    *
-                  </span>
-                </label>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <label
+                      htmlFor="paper_file"
+                      className="block text-sm font-semibold text-slate-900"
+                    >
+                      Research Paper PDF{" "}
+                      <span className="text-red-500">
+                        *
+                      </span>
+                    </label>
 
-                <p className="mt-1 text-sm text-slate-500">
-                  Upload the actual PDF document
-                  associated with this paper.
-                </p>
+                    <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-600">
+                      Required
+                    </span>
+                  </div>
+
+                  <p className="mt-1 text-sm leading-5 text-slate-500">
+                    Upload the actual PDF document.
+                    It will be processed for research
+                    and AI-powered features.
+                  </p>
+                </div>
               </div>
 
               <div className="mt-4">
                 <label
                   htmlFor="paper_file"
-                  className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-white px-6 py-8 text-center transition-colors duration-200 hover:border-blue-400 hover:bg-blue-50/30"
+                  className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed px-6 py-9 text-center transition-all duration-200 ${
+                    selectedFile
+                      ? "border-blue-300 bg-blue-50/40"
+                      : "border-slate-300 bg-white hover:border-blue-400 hover:bg-blue-50/30"
+                  }`}
                 >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-lg font-medium text-blue-600">
                     ↑
                   </div>
 
@@ -397,7 +395,12 @@ function CreatePaper() {
                   </p>
 
                   <p className="mt-1 text-xs text-slate-500">
-                    PDF files only
+                    {selectedFile
+                      ? `${(
+                          selectedFile.size /
+                          (1024 * 1024)
+                        ).toFixed(2)} MB`
+                      : "PDF files only"}
                   </p>
 
                   <input
@@ -412,10 +415,28 @@ function CreatePaper() {
                 </label>
 
                 {selectedFile && (
-                  <p className="mt-2 text-xs text-slate-500">
-                    Selected:{" "}
-                    {selectedFile.name}
-                  </p>
+                  <div className="mt-3 flex items-center justify-between rounded-lg border border-slate-200 bg-white px-4 py-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-slate-700">
+                        {selectedFile.name}
+                      </p>
+
+                      <p className="mt-0.5 text-xs text-slate-500">
+                        PDF document selected
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedFile(null)
+                      }
+                      disabled={submitting}
+                      className="ml-4 shrink-0 text-xs font-medium text-red-600 transition-colors hover:text-red-700 disabled:opacity-50"
+                    >
+                      Remove
+                    </button>
+                  </div>
                 )}
               </div>
             </div>

@@ -39,19 +39,18 @@ export interface CreatePaperRequest {
   authors: string;
   publication_year: number;
   journal: string;
-  doi: string;
+  doi?: string;
   category: string;
-  pdf_url: string;
 }
 
 export async function createPaper(
   data: CreatePaperRequest,
-): Promise<Paper> {
+): Promise<any> {
   const token = localStorage.getItem(
     "access_token",
   );
 
-  return apiClient<Paper>(
+  return apiClient(
     "/papers/",
     {
       method: "POST",

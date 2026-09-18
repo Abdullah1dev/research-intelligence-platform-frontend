@@ -26,6 +26,70 @@ export async function getPaperDocument(
     },
   );
 }
+export async function replacePaperDocument(
+  paperId: number,
+  file: File,
+): Promise<PaperDocument> {
+  const token = localStorage.getItem("access_token");
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch(
+    `http://localhost:8000/papers/${paperId}/document`,
+    {
+      method: "PUT",
+      headers: {
+        ...(token
+          ? {
+              Authorization: `Bearer ${token}`,
+            }
+          : {}),
+      },
+      body: formData,
+    },
+  );
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+
+    throw new Error(
+      errorBody ||
+        `Document replacement failed: ${response.status}`,
+    );
+  }
+
+  return response.json();
+}
+
+export async function deletePaperDocument(
+  paperId: number,
+): Promise<void> {
+  const token = localStorage.getItem("access_token");
+
+  const response = await fetch(
+    `http://localhost:8000/papers/${paperId}/document`,
+    {
+      method: "DELETE",
+      headers: {
+        ...(token
+          ? {
+              Authorization: `Bearer ${token}`,
+            }
+          : {}),
+      },
+    },
+  );
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+
+    throw new Error(
+      errorBody ||
+        `Document deletion failed: ${response.status}`,
+    );
+  }
+}
 
 export async function uploadPaperDocument(
   paperId: number,

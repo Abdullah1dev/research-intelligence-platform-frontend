@@ -1,4 +1,8 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { Link, useParams } from "react-router-dom";
 
 import {
@@ -16,7 +20,11 @@ import type {
   PaperRecommendation,
 } from "../api/papers";
 
-import { getPaperDocument } from "../api/documents";
+import {
+  deletePaperDocument,
+  getPaperDocument,
+  replacePaperDocument,
+} from "../api/documents";
 
 import type {
   PaperDocument,
@@ -82,6 +90,12 @@ function PaperWorkspace() {
   const [askingQuestion, setAskingQuestion] =
     useState(false);
 
+  const [replacingDocument, setReplacingDocument] =
+    useState(false);
+
+  const [deletingDocument, setDeletingDocument] =
+    useState(false);
+
   const [error, setError] =
     useState<string | null>(null);
 
@@ -96,6 +110,12 @@ function PaperWorkspace() {
 
   const [recommendationsError, setRecommendationsError] =
     useState<string | null>(null);
+
+  const [documentActionMessage, setDocumentActionMessage] =
+    useState<string | null>(null);
+
+  const fileInputRef =
+    useRef<HTMLInputElement | null>(null);
 
 
   // ==========================================
@@ -208,6 +228,110 @@ function PaperWorkspace() {
 
     loadRecommendations();
   }, [activeTab, numericPaperId]);
+
+
+  // ==========================================
+  // Replace document
+  // ==========================================
+
+  async function handleReplaceDocument(
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) {
+    const file = event.target.files?.[0];
+
+    event.target.value = "";
+
+    if (!file) {
+      return;
+    }
+
+    if (
+      file.type !== "application/pdf" &&
+      !file.name.toLowerCase().endsWith(".pdf")
+    ) {
+      setDocumentActionMessage(
+        "Please select a PDF file.",
+      );
+      return;
+    }
+
+    if (!Number.isFinite(numericPaperId)) {
+      return;
+    }
+
+    try {
+      setReplacingDocument(true);
+      setDocumentError(null);
+      setDocumentActionMessage(null);
+
+      const updatedDocument =
+        await replacePaperDocument(
+          numericPaperId,
+          file,
+        );
+
+      setDocument(updatedDocument);
+
+      setDocumentActionMessage(
+        "PDF replaced successfully.",
+      );
+    } catch (err) {
+      setDocumentActionMessage(
+        err instanceof Error
+          ? err.message
+          : "Failed to replace PDF.",
+      );
+    } finally {
+      setReplacingDocument(false);
+    }
+  }
+
+
+  // ==========================================
+  // Delete document
+  // ==========================================
+
+  async function handleDeleteDocument() {
+    if (!document) {
+      return;
+    }
+
+    if (!Number.isFinite(numericPaperId)) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this PDF? Its document chunks and embeddings will also be removed.",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setDeletingDocument(true);
+      setDocumentError(null);
+      setDocumentActionMessage(null);
+
+      await deletePaperDocument(
+        numericPaperId,
+      );
+
+      setDocument(null);
+
+      setDocumentActionMessage(
+        "PDF deleted successfully.",
+      );
+    } catch (err) {
+      setDocumentActionMessage(
+        err instanceof Error
+          ? err.message
+          : "Failed to delete PDF.",
+      );
+    } finally {
+      setDeletingDocument(false);
+    }
+  }
 
 
   // ==========================================
@@ -618,7 +742,7 @@ function PaperWorkspace() {
             {activeTab === "document" && (
               <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
 
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 
                   <div>
                     <h2 className="text-lg font-semibold text-slate-900">
@@ -630,7 +754,65 @@ function PaperWorkspace() {
                     </p>
                   </div>
 
+                  {document && (
+                    <div className="flex flex-wrap gap-2">
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          fileInputRef.current?.click()
+                        }
+                        disabled={
+                          replacingDocument ||
+                          deletingDocument
+                        }
+                        className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {replacingDocument
+                          ? "Replacing..."
+                          : "Replace PDF"}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={
+                          handleDeleteDocument
+                        }
+                        disabled={
+                          replacingDocument ||
+                          deletingDocument
+                        }
+                        className="rounded-lg border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {deletingDocument
+                          ? "Deleting..."
+                          : "Delete PDF"}
+                      </button>
+
+                    </div>
+                  )}
+
                 </div>
+
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  onChange={
+                    handleReplaceDocument
+                  }
+                  className="hidden"
+                />
+
+
+                {documentActionMessage && (
+                  <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-sm text-slate-700">
+                      {documentActionMessage}
+                    </p>
+                  </div>
+                )}
 
 
                 {loadingDocument && (
