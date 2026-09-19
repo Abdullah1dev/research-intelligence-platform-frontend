@@ -22,6 +22,7 @@ import type {
 
 import {
   deletePaperDocument,
+  downloadPaperDocument,
   getPaperDocument,
   replacePaperDocument,
 } from "../api/documents";
@@ -95,6 +96,9 @@ function PaperWorkspace() {
 
   const [deletingDocument, setDeletingDocument] =
     useState(false);
+  
+  const [downloadingDocument, setDownloadingDocument] =
+  useState(false);
 
   const [error, setError] =
     useState<string | null>(null);
@@ -285,6 +289,58 @@ function PaperWorkspace() {
       setReplacingDocument(false);
     }
   }
+
+
+// ==========================================
+// Download document
+// ==========================================
+
+async function handleDownloadDocument() {
+  if (!document) {
+    return;
+  }
+
+  if (!Number.isFinite(numericPaperId)) {
+    return;
+  }
+
+  try {
+    setDownloadingDocument(true);
+    setDocumentError(null);
+    setDocumentActionMessage(null);
+
+    const blob = await downloadPaperDocument(
+      numericPaperId,
+    );
+
+    const url = window.URL.createObjectURL(blob);
+
+    const link = window.document.createElement("a");
+
+    link.href = url;
+    link.download = document.file_name;
+
+    window.document.body.appendChild(link);
+
+    link.click();
+
+    link.remove();
+
+    window.URL.revokeObjectURL(url);
+
+    setDocumentActionMessage(
+      "PDF downloaded successfully.",
+    );
+  } catch (err) {
+    setDocumentActionMessage(
+      err instanceof Error
+        ? err.message
+        : "Failed to download PDF.",
+    );
+  } finally {
+    setDownloadingDocument(false);
+  }
+}
 
 
   // ==========================================
@@ -757,69 +813,84 @@ function PaperWorkspace() {
                   {document && (
                     <div className="flex flex-wrap gap-2">
 
-                      <button
-                        type="button"
-                        onClick={() =>
-                          fileInputRef.current?.click()
+                     <button
+                          type="button"
+                          onClick={() =>
+                            fileInputRef.current?.click()
+                          }
+                          disabled={
+                            replacingDocument ||
+                            deletingDocument ||
+                            downloadingDocument
+                          }
+                          className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {replacingDocument
+                            ? "Replacing..."
+                            : "Replace PDF"}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handleDownloadDocument}
+                          disabled={
+                            replacingDocument ||
+                            deletingDocument ||
+                            downloadingDocument
+                          }
+                          className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {downloadingDocument
+                            ? "Downloading..."
+                            : "Download PDF"}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handleDeleteDocument}
+                          disabled={
+                            replacingDocument ||
+                            deletingDocument ||
+                            downloadingDocument
+                          }
+                          className="rounded-lg border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {deletingDocument
+                            ? "Deleting..."
+                            : "Delete PDF"}
+                        </button>
+
+                          </div>
+                        )}
+
+                      </div>
+
+
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="application/pdf,.pdf"
+                        onChange={
+                          handleReplaceDocument
                         }
-                        disabled={
-                          replacingDocument ||
-                          deletingDocument
-                        }
-                        className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        {replacingDocument
-                          ? "Replacing..."
-                          : "Replace PDF"}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={
-                          handleDeleteDocument
-                        }
-                        disabled={
-                          replacingDocument ||
-                          deletingDocument
-                        }
-                        className="rounded-lg border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        {deletingDocument
-                          ? "Deleting..."
-                          : "Delete PDF"}
-                      </button>
-
-                    </div>
-                  )}
-
-                </div>
+                        className="hidden"
+                      />
 
 
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="application/pdf,.pdf"
-                  onChange={
-                    handleReplaceDocument
-                  }
-                  className="hidden"
-                />
+                      {documentActionMessage && (
+                        <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                          <p className="text-sm text-slate-700">
+                            {documentActionMessage}
+                          </p>
+                        </div>
+                      )}
 
 
-                {documentActionMessage && (
-                  <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-sm text-slate-700">
-                      {documentActionMessage}
-                    </p>
-                  </div>
-                )}
-
-
-                {loadingDocument && (
-                  <div className="mt-8 rounded-xl bg-slate-50 p-6 text-center text-sm text-slate-500">
-                    Loading document...
-                  </div>
-                )}
+                      {loadingDocument && (
+                        <div className="mt-8 rounded-xl bg-slate-50 p-6 text-center text-sm text-slate-500">
+                          Loading document...
+                        </div>
+                      )}
 
 
                 {documentError && !loadingDocument && (

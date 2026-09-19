@@ -26,6 +26,7 @@ export async function getPaperDocument(
     },
   );
 }
+
 export async function replacePaperDocument(
   paperId: number,
   file: File,
@@ -89,6 +90,38 @@ export async function deletePaperDocument(
         `Document deletion failed: ${response.status}`,
     );
   }
+}
+
+
+export async function downloadPaperDocument(
+  paperId: number,
+): Promise<Blob> {
+  const token = localStorage.getItem("access_token");
+
+  const response = await fetch(
+    `http://localhost:8000/papers/${paperId}/document/download`,
+    {
+      method: "GET",
+      headers: {
+        ...(token
+          ? {
+              Authorization: `Bearer ${token}`,
+            }
+          : {}),
+      },
+    },
+  );
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+
+    throw new Error(
+      errorBody ||
+        `Document download failed: ${response.status}`,
+    );
+  }
+
+  return response.blob();
 }
 
 export async function uploadPaperDocument(
