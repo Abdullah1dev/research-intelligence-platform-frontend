@@ -1,4 +1,7 @@
-import { apiClient } from "./client";
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+  import { apiClient } from "./client";
 
 export interface PaperDocument {
   id: number;
@@ -37,7 +40,7 @@ export async function replacePaperDocument(
   formData.append("file", file);
 
   const response = await fetch(
-    `http://localhost:8000/papers/${paperId}/document`,
+    `${API_BASE_URL}/papers/${paperId}/document`,
     {
       method: "PUT",
       headers: {
@@ -99,7 +102,7 @@ export async function downloadPaperDocument(
   const token = localStorage.getItem("access_token");
 
   const response = await fetch(
-    `http://localhost:8000/papers/${paperId}/document/download`,
+    `${API_BASE_URL}/papers/${paperId}/document/download`,
     {
       method: "GET",
       headers: {
